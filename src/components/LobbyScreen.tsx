@@ -457,43 +457,42 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
           </span>
         </div>
 
-        {/* Room Code & Share Widget (Online Mode only) */}
-        {gameMode === 'online' && (
-          <div className="p-3.5 rounded-xl bg-[#171b26] border border-white/5 shadow-md flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-wider text-[#e6bdb8] font-semibold">
-                Código del Aquelarre
+        {/* Room Code & Share Widget (Available for both mobile scan & sync) */}
+        <div className="p-3.5 rounded-xl bg-[#171b26] border border-white/5 shadow-md flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-[#e6bdb8] font-semibold">
+              {gameMode === 'online' ? 'Código del Aquelarre (Online)' : 'Código de Sala / QR Móvil'}
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="font-['Playfair_Display'] text-xl text-[#4cd7f6] tracking-widest font-bold">
+                LOB0-77
               </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-['Playfair_Display'] text-xl text-[#4cd7f6] tracking-widest font-bold">
-                  LOB0-77
-                </span>
-                <span className="w-2 h-2 rounded-full bg-[#4cd7f6] animate-ping"></span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCopyInvite}
-                className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center gap-1.5 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px] text-[#4cd7f6]">
-                  {copied ? 'done' : 'share'}
-                </span>
-                <span>{copied ? '¡Copiado!' : 'Invitar'}</span>
-              </button>
-              <button
-                onClick={() => {
-                  playClickSound();
-                  onOpenQr();
-                }}
-                className="w-9 h-9 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Ver código QR"
-              >
-                <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
-              </button>
+              <span className="w-2 h-2 rounded-full bg-[#4cd7f6] animate-ping"></span>
             </div>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyInvite}
+              className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center gap-1.5 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#4cd7f6]">
+                {copied ? 'done' : 'share'}
+              </span>
+              <span>{copied ? '¡Copiado!' : 'Invitar'}</span>
+            </button>
+            <button
+              onClick={() => {
+                playClickSound();
+                onOpenQr();
+              }}
+              className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[#ffb95f] flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+              title="Ver código QR oficial"
+            >
+              <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
+              <span>QR</span>
+            </button>
+          </div>
+        </div>
 
         {/* Villagers in Waiting Grid (Online Sincro mode) */}
         {gameMode === 'online' && (

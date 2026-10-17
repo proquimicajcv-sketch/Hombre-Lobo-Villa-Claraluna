@@ -113,11 +113,16 @@ export const getCustomCardImages = (): Partial<Record<RoleType, string>> => {
     }
   }
 
-  // Merge with defaults
-  const merged: Partial<Record<RoleType, string>> = {
-    ...DEFAULT_RAW_CARD_IMAGES,
-    ...images,
-  };
+  // Merge with factory defaults safely (ignoring empty strings in localStorage)
+  const merged: Partial<Record<RoleType, string>> = {};
+  for (const [k, v] of Object.entries(DEFAULT_RAW_CARD_IMAGES)) {
+    if (v) merged[k as RoleType] = v;
+  }
+  for (const [k, v] of Object.entries(images)) {
+    if (v && typeof v === 'string' && v.trim().length > 0) {
+      merged[k as RoleType] = v.trim();
+    }
+  }
 
   // Run normalization across all entries so any existing or restored URLs work properly
   const normalizedMap: Partial<Record<RoleType, string>> = {};
@@ -129,6 +134,36 @@ export const getCustomCardImages = (): Partial<Record<RoleType, string>> => {
 
   return normalizedMap;
 };
+
+export { OFFICIAL_QR_CODE_URL, OFFICIAL_QR_CODE_FALLBACK_URL } from '../data/defaultCustomCards';
+
+const QR_STORAGE_KEY = 'claraluna_custom_qr_image';
+
+export const getQrImageUrl = (): string => {
+  try {
+    const custom = localStorage.getItem(QR_STORAGE_KEY);
+    if (custom && custom.trim()) {
+      return normalizeImageUrl(custom.trim());
+    }
+  } catch {
+    // fallback
+  }
+  return DEFAULT_RAW_CARD_IMAGES.villager ? 'https://raw.githubusercontent.com/proquimicajcv-sketch/Hombre-Lobo-Villa-Claraluna/main/cartas/C%C3%B3digo%20QR%20VillaCL.png' : '';
+};
+
+export const setQrImageUrl = (url: string) => {
+  try {
+    if (url && url.trim()) {
+      localStorage.setItem(QR_STORAGE_KEY, normalizeImageUrl(url.trim()));
+    } else {
+      localStorage.removeItem(QR_STORAGE_KEY);
+    }
+    window.dispatchEvent(new Event('claraluna_qr_updated'));
+  } catch (e) {
+    console.error('Error saving QR code image', e);
+  }
+};
+
 
 // Save a custom card image with multi-tier redundancy and automatic normalization
 export const setCustomCardImage = (role: RoleType, imageUrl: string) => {
