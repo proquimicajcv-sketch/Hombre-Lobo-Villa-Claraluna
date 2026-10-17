@@ -56,7 +56,11 @@ export const CardScreen: React.FC<CardScreenProps> = ({
   const [isEditingCurrentName, setIsEditingCurrentName] = useState(false);
   const [inlineName, setInlineName] = useState('');
 
-  const activePlayer = players[activePlayerIndex] || currentPlayer || players[0];
+  // In Online Sincro mode, each player can ONLY ever see their own secret card!
+  const activePlayer =
+    gameMode === 'online'
+      ? currentPlayer
+      : players[activePlayerIndex] || currentPlayer || players[0];
 
   const handleFlip = () => {
     // Only card whoosh - NO wolf howl ever!
@@ -246,62 +250,88 @@ export const CardScreen: React.FC<CardScreenProps> = ({
         </h2>
       </div>
 
-      {/* Local Pass-the-phone Bar (Quick navigation, Name edit & Random Role) */}
-      <div className="w-full mb-3 p-2 rounded-xl bg-[#171b26] border border-white/10 flex items-center justify-between gap-2 shadow-md">
-        <div className="flex items-center gap-2 min-w-0">
-          <button
-            onClick={handlePrevPlayer}
-            className="p-1 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[#e6bdb8] transition-colors cursor-pointer"
-            title="Jugador anterior"
-          >
-            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          </button>
-
-          <img
-            src={activePlayer.avatarUrl}
-            alt={activePlayer.name}
-            className="w-8 h-8 rounded-full object-cover border border-[#4cd7f6] shrink-0"
-          />
-
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-white truncate">
-                {activePlayer.name}
+      {/* Player Header Bar: Private badge in Online Sincro, or Pass-the-phone navigation in Local mode */}
+      {gameMode === 'online' ? (
+        <div className="w-full mb-3 p-3 rounded-2xl bg-[#171b26] border border-amber-500/30 flex items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={currentPlayer.avatarUrl}
+              alt={currentPlayer.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-sm"
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold text-white truncate font-['Playfair_Display']">
+                {currentPlayer.name}
               </span>
-              <button
-                onClick={startInlineEdit}
-                className="text-zinc-400 hover:text-[#4cd7f6] cursor-pointer shrink-0"
-                title="Editar este nombre"
-              >
-                <span className="material-symbols-outlined text-[13px]">edit</span>
-              </button>
+              <span className="text-[11px] text-amber-300 font-semibold flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">lock</span>
+                <span>Tu Rol Secreto (Solo tú puedes verlo)</span>
+              </span>
             </div>
-            <span className="text-[10px] text-[#e6bdb8]">
-              Jugador {activePlayerIndex + 1} de {players.length}
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold uppercase tracking-wider">
+              🟢 En Línea
             </span>
           </div>
         </div>
+      ) : (
+        <div className="w-full mb-3 p-2 rounded-xl bg-[#171b26] border border-white/10 flex items-center justify-between gap-2 shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={handlePrevPlayer}
+              className="p-1 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[#e6bdb8] transition-colors cursor-pointer"
+              title="Jugador anterior"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            </button>
 
-        {/* Action buttons: Random Role & Next Player */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={handleRandomizeCurrent}
-            className="px-2 py-1 rounded-lg bg-purple-950/80 border border-purple-500/40 hover:border-purple-400 text-purple-200 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
-            title="Asignar rol al azar a este jugador"
-          >
-            <span className="material-symbols-outlined text-[14px]">casino</span>
-            <span className="hidden sm:inline">Rol al azar</span>
-          </button>
+            <img
+              src={activePlayer.avatarUrl}
+              alt={activePlayer.name}
+              className="w-8 h-8 rounded-full object-cover border border-[#4cd7f6] shrink-0"
+            />
 
-          <button
-            onClick={handleNextPlayer}
-            className="px-2.5 py-1 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[11px] font-semibold text-[#ffb95f] flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <span>Siguiente</span>
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-          </button>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white truncate">
+                  {activePlayer.name}
+                </span>
+                <button
+                  onClick={startInlineEdit}
+                  className="text-zinc-400 hover:text-[#4cd7f6] cursor-pointer shrink-0"
+                  title="Editar este nombre"
+                >
+                  <span className="material-symbols-outlined text-[13px]">edit</span>
+                </button>
+              </div>
+              <span className="text-[10px] text-[#e6bdb8]">
+                Jugador {activePlayerIndex + 1} de {players.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Action buttons: Random Role & Next Player */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={handleRandomizeCurrent}
+              className="px-2 py-1 rounded-lg bg-purple-950/80 border border-purple-500/40 hover:border-purple-400 text-purple-200 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Asignar rol al azar a este jugador"
+            >
+              <span className="material-symbols-outlined text-[14px]">casino</span>
+              <span className="hidden sm:inline">Rol al azar</span>
+            </button>
+
+            <button
+              onClick={handleNextPlayer}
+              className="px-2.5 py-1 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[11px] font-semibold text-[#ffb95f] flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <span>Siguiente</span>
+              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================
           THE OFFICIAL 9:16 FICHA CARD (Interactive Tarot flip)

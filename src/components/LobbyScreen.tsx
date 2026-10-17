@@ -17,6 +17,7 @@ interface LobbyScreenProps {
   gameMode: GameMode;
   roomCode?: string;
   waitingQueue?: Player[];
+  restartVotes?: string[];
   onSwitchRoom?: (roomCode: string) => void;
   onSetGameMode: (mode: GameMode) => void;
   onUpdateDeckCount: (role: keyof Omit<DeckConfig, 'targetPlayers'>, delta: number) => void;
@@ -32,6 +33,8 @@ interface LobbyScreenProps {
   onRandomizePlayerRole: (playerId: string) => void;
   onAssignPlayerRole: (playerId: string, role: RoleType) => void;
   onImportNames: (names: string[]) => void;
+  onFillNpcs?: () => void;
+  onVoteRestart?: () => void;
 }
 
 export const LobbyScreen: React.FC<LobbyScreenProps> = ({
@@ -40,6 +43,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   gameMode,
   roomCode = 'LOB0-77',
   waitingQueue = [],
+  restartVotes = [],
   onSwitchRoom,
   onSetGameMode,
   onUpdateDeckCount,
@@ -55,6 +59,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onRandomizePlayerRole,
   onAssignPlayerRole,
   onImportNames,
+  onFillNpcs,
+  onVoteRestart,
 }) => {
   const [copied, setCopied] = React.useState(false);
   const [isConjuring, setIsConjuring] = React.useState(false);
@@ -503,12 +509,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
             </div>
           </div>
 
-          {/* Quick Room Switcher (LOB0-77 <-> LOBO-67) */}
+          {/* Quick Room Switcher (LOB0-77 <-> LOBO-67 <-> NPC-1 <-> NPC-2) */}
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs flex-wrap gap-2">
             <span className="text-[11px] text-zinc-400">
-              Salas oficiales:
+              Salas de juego:
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 onClick={() => {
                   playClickSound();
@@ -519,6 +525,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     ? 'bg-[#4cd7f6] text-black shadow-sm'
                     : 'bg-[#262a35] hover:bg-[#353944] text-white'
                 }`}
+                title="Sala principal multijugador en vivo"
               >
                 #LOB0-77
               </button>
@@ -532,8 +539,37 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     ? 'bg-[#4cd7f6] text-black shadow-sm'
                     : 'bg-[#262a35] hover:bg-[#353944] text-white'
                 }`}
+                title="Sala alternativa multijugador"
               >
                 #LOBO-67
+              </button>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onSwitchRoom?.('NPC-1');
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                  roomCode === 'NPC-1'
+                    ? 'bg-purple-400 text-black shadow-sm font-extrabold'
+                    : 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 border border-purple-500/30'
+                }`}
+                title="Jugar en solitario con aldeanos autómatas (Bots)"
+              >
+                🤖 #NPC-1 (Solo)
+              </button>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onSwitchRoom?.('NPC-2');
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                  roomCode === 'NPC-2'
+                    ? 'bg-purple-400 text-black shadow-sm font-extrabold'
+                    : 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 border border-purple-500/30'
+                }`}
+                title="Segunda sala en solitario con Bots"
+              >
+                🤖 #NPC-2
               </button>
             </div>
           </div>

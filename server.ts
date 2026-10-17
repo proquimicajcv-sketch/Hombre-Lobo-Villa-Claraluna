@@ -98,12 +98,56 @@ export interface RoomState {
     loversChosen?: [string, string];
   };
   waitingQueue: Player[];
+  restartVotes: string[]; // Player IDs who voted to restart the game
   lastUpdated: number;
 }
 
 export const MIN_PLAYERS = 7;
 export const MAX_PLAYERS = 25;
 export const ACTION_TIMEOUT_SECONDS = 60;
+
+export const NPC_ROSTER = [
+  {
+    name: 'Elena (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAa6ORFhSHL4JXpo1BOFCH-WxHK6UU4Jn0hY9td8o9dTGeq16d5kD0uHGTZ6nEq3U5qS1c7v28DkQiJYTp5NNujCiuZc22CY4_n9aAUocIJSN8piqwoZtHnJ1AGfc-fHOI-5ksC8OrTvC6eKY2g_OizEOM7kmP5wlo226hFv8GH_GEUC2cVbzX-hjVaKvUOz09Bu6OMfsG7fAD0CVog1WRcYMFOVsARAJLoGt3IExGqz_E0MLa_vtpfHw',
+  },
+  {
+    name: 'Carlos (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCf8WMjwM0R1LQOjZIkJSH0v3PGMkHiZ4lWRyWkPT8TNleYqqYliKP_XcfA-f6_nvZuDasv9pVG1nVWqHPkzBWMLUrlTdNss1pcynTwv1uKvLXi7v49yBd7G2dBFLqTQ--QcqIbuMVZzw0SY3NEL_TbAeZOtmCcfdb9NYV9jOU16i6_9x_JZWIdAH57f2LD63e0ZrzjtsQkX_cFF1VR2bAVL6xMmo8KKpkIUTZTrjXoFyr07VnATEAuTw',
+  },
+  {
+    name: 'Sofía (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBaICa67tp_F1zq7jF0la9-_z3o_4-Z7vXybzykIwKtMApDmubWimEfbrQDHXHHbX71VVAjgHoESXIwauPKJY6Eqr5Vob21mwRijtJcrjHL-i6qD-WOjGseGb4D71mI21TvRWBk6bSORD3J-UNp8p7wu0iP72FA2hkXTlRDDbEhGwsQL_eJaqwHqD3KnOzdSsfMXzeKtgh4pWASBA3otJKTTcg-DvyYzqMmSyLuTm13WmBO6dAD6IvWgg',
+  },
+  {
+    name: 'Lucas (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDff9aW54Ydo9Z4jcwvyEUNrW1N17etUUDMDCeFGIjFFHtq6qySRJGVUOuiOcB1_8sSfBjmOfqlKQZ39pzgfcqWpZDI2-YORLStnmcj24fYpGaJ0D0s32UWr1RIY20cfXz81QTNOLFipvPgkIBWtxw2mLl4sTpaCH19DNqRzrKPvy4SGRpTQ-_--fHsVeiMK9A1doyV1TkUn8SIeER7CEF7iaSlxrx1g2q8F_A5XWeZWneykYMkNTiTmQ',
+  },
+  {
+    name: 'Valentina (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBxTc4Gu7_y7t7MSDGq025fdCzK_YHfd-A68LFh72fJS_X3jBCY9HHkJbd6ER191WSO9bDGDaBLzkZ6bsryycNUSHxu9sFsIZczXuTeKLvt4aN885G_u-Cep_SCMhcM1-wM3h6TTjYqTrln7LI9HglRLYLzOGYmZsS9QhcW_uQ0J_2YF8ANrRzciCGb6E2KHZ2hpbQZ-5IwDy0wNhhg_m6Z2k9QjHXB-xhKEfgpFGVlQzQ17DY3D1PZsw',
+  },
+  {
+    name: 'Diego (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCdzZCrKyduA1z9yTtMkduPe4lSuLaPtz7B3AagyQ_Ym6xZp_gJfmlAj5cOG9-TzJQiViNBVqzlXUQwQs3fkiVgiURbAJJmQK8TJZUYEzz7TL3ApS8wfJAb86JpG1C_JmWfxYhm8Nj2PpiSoPidgqKuCNn1NOP8h4FJWVt6LJGALLBlVxB225vjPg010x-nPlh1XPgfR1IiI7AzrBmYdsoZpa5OVEGMa1lTNtfonouJCVkm1q-v-utxpw',
+  },
+  {
+    name: 'Lucía (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBjBcccqgFMA3JwxKZR_whHrnNJmguLjpK7L-1-HWYDeAJzLMmArXImXSVD-Wj7lqGbkvMCskuEGXAsdAgnINS7VilhoUMp7Utcgp8oalGk16Cz4ZD-Ux_UN2aCsKPBD_OyxOIxsKV4ElF7SFb4g5_e1-IEKKfYK3lbsGf8kBxCPRpjfTVdVN943qhsbCndVvSvpReaIkY8gJDRjcfYRDh-InSoN3Of2oTnLToD1fG5ONeA1HqMj1AYuQ',
+  },
+  {
+    name: 'Marcos (NPC)',
+    avatarUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDI4FIIMSEIayraAoUY1t_KMyzzrUom3xQV2HK0-xZ3l8T-mYUreyayk3PdAj8kMb2htvt2i0lFL1fyoNAfHUIWZWOyzNkBNcNE6I6b87QDdHXgDhZ_4UhoCM4sLXG5qVtsbo6HecvxiBW6kXGg9qR2p5qnCP4ptPeAx3GhBzumaiX22oxB3XF5ViYsvuYpkQd40kg8E4Ad_3SGu2jVNFJUgQWdDDTLDy37dfTukjRueyGiXzWRw3DdEw',
+  },
+];
 
 export function calculateBalancedDeck(count: number): DeckConfig {
   const clamped = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, count));
@@ -170,28 +214,49 @@ const getOrCreateRoom = (roomCode: string, initialHostName?: string): RoomState 
   let room = rooms.get(code);
   if (!room) {
     const hostId = `p_host_${Date.now()}`;
+    const initialPlayers: Player[] = [
+      {
+        id: hostId,
+        name: initialHostName || (code.startsWith('NPC-') ? 'Tú (Jugador)' : 'Anfitrión'),
+        isHost: true,
+        isCurrentUser: true,
+        isMayor: true,
+        avatarUrl:
+          'https://lh3.googleusercontent.com/aida-public/AB6AXuB3dg_vQWq0VPRNKkvEA_k_pu5_xdAihlhNwXLe7JGvL95FSlraaMcQA7rjBeClL2Lj41iX8PuVch3QhgiT2VAvHGNXGXEwx8Be7Q4RVe4aLvqSaEuUJfQny8EKcL6eqDXf19EiQulag_ZCVIPZ0D55VrnFC65YV0CD0K5F3cgLdbgs9n6bB605HJXVyYpYRToU81tmUKK7hfVrNwd8zgfNpayxfvSWDMy9d8dVq-EahbAPjnANnHucOQ',
+        role: 'villager',
+        isAlive: true,
+        isReady: true,
+        votes: 0,
+        lastPing: Date.now(),
+      },
+    ];
+
+    // If it's a dedicated NPC room (NPC-1, NPC-2, etc.), auto-fill with 6 NPCs to meet 7 players minimum
+    if (code.startsWith('NPC-')) {
+      for (let i = 0; i < 6; i++) {
+        const t = NPC_ROSTER[i % NPC_ROSTER.length];
+        initialPlayers.push({
+          id: `p_npc_init_${i}`,
+          name: t.name,
+          avatarUrl: t.avatarUrl,
+          role: 'villager',
+          isAlive: true,
+          isReady: true,
+          votes: 0,
+          isBot: true,
+          disconnected: false,
+          lastPing: Date.now(),
+        });
+      }
+    }
+
     room = {
       roomCode: code,
       hostId,
       gameMode: 'online',
       activeTab: 'lobby-sala',
-      deck: calculateBalancedDeck(MIN_PLAYERS),
-      players: [
-        {
-          id: hostId,
-          name: initialHostName || 'Anfitrión',
-          isHost: true,
-          isCurrentUser: true,
-          isMayor: true,
-          avatarUrl:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuB3dg_vQWq0VPRNKkvEA_k_pu5_xdAihlhNwXLe7JGvL95FSlraaMcQA7rjBeClL2Lj41iX8PuVch3QhgiT2VAvHGNXGXEwx8Be7Q4RVe4aLvqSaEuUJfQny8EKcL6eqDXf19EiQulag_ZCVIPZ0D55VrnFC65YV0CD0K5F3cgLdbgs9n6bB605HJXVyYpYRToU81tmUKK7hfVrNwd8zgfNpayxfvSWDMy9d8dVq-EahbAPjnANnHucOQ',
-          role: 'alfa_werewolf',
-          isAlive: true,
-          isReady: true,
-          votes: 0,
-          lastPing: Date.now(),
-        },
-      ],
+      deck: calculateBalancedDeck(initialPlayers.length >= MIN_PLAYERS ? initialPlayers.length : MIN_PLAYERS),
+      players: initialPlayers,
       nightNumber: 1,
       dayNumber: 1,
       accusations: [
@@ -199,7 +264,9 @@ const getOrCreateRoom = (roomCode: string, initialHostName?: string): RoomState 
           id: 'init_1',
           author: 'Crónicas de Villa Claraluna',
           target: 'La Aldea',
-          message: 'El aquelarre se ha abierto. Se requiere un mínimo de 7 jugadores (máx 25).',
+          message: code.startsWith('NPC-')
+            ? '🏛️ Aquelarre en solitario con aldeanos autómatas (NPCs). ¡El Guardián dirige la partida!'
+            : 'El aquelarre se ha abierto. Se requiere un mínimo de 7 jugadores (máx 25).',
           timestamp: 'Justo ahora',
           severity: 'low',
         },
@@ -217,6 +284,7 @@ const getOrCreateRoom = (roomCode: string, initialHostName?: string): RoomState 
         healedId: null,
       },
       waitingQueue: [],
+      restartVotes: [],
       lastUpdated: Date.now(),
     };
     rooms.set(code, room);
@@ -224,28 +292,30 @@ const getOrCreateRoom = (roomCode: string, initialHostName?: string): RoomState 
   return room;
 };
 
-// Sanitize room data for client
+// Sanitize room data for client: ONLY player's own card is visible!
+// Host is virtual/system and CANNOT peek at others' cards.
 const sanitizeRoomForPlayer = (room: RoomState, playerId?: string): RoomState => {
   const player = room.players.find((p) => p.id === playerId);
-  const isHost = player?.isHost ?? false;
   const isWolf = player?.role === 'werewolf' || player?.role === 'alfa_werewolf';
 
   const sanitizedPlayers = room.players.map((p) => {
+    // Before game starts, everyone is presented neutrally as villager
     if (!room.gameStarted) {
       return { ...p, role: 'villager' as RoleType };
     }
+    // Player always sees their own real secret role
     if (p.id === playerId) {
       return p;
     }
-    if (isHost) {
-      return p;
-    }
+    // Fellow werewolves see each other
     if (isWolf && (p.role === 'werewolf' || p.role === 'alfa_werewolf')) {
       return p;
     }
+    // Lovers see each other
     if (player?.isLover && player.loverId === p.id) {
       return p;
     }
+    // For all other players, mask role as villager
     return {
       ...p,
       role: 'villager' as RoleType,
@@ -557,6 +627,18 @@ app.post('/api/rooms/:roomCode/join', (req: Request, res: Response) => {
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBaICa67tp_F1zq7jF0la9-_z3o_4-Z7vXybzykIwKtMApDmubWimEfbrQDHXHHbX71VVAjgHoESXIwauPKJY6Eqr5Vob21mwRijtJcrjHL-i6qD-WOjGseGb4D71mI21TvRWBk6bSORD3J-UNp8p7wu0iP72FA2hkXTlRDDbEhGwsQL_eJaqwHqD3KnOzdSsfMXzeKtgh4pWASBA3otJKTTcg-DvyYzqMmSyLuTm13WmBO6dAD6IvWgg',
     'https://lh3.googleusercontent.com/aida-public/AB6AXuDff9aW54Ydo9Z4jcwvyEUNrW1N17etUUDMDCeFGIjFFHtq6qySRJGVUOuiOcB1_8sSfBjmOfqlKQZ39pzgfcqWpZDI2-YORLStnmcj24fYpGaJ0D0s32UWr1RIY20cfXz81QTNOLFipvPgkIBWtxw2mLl4sTpaCH19DNqRzrKPvy4SGRpTQ-_--fHsVeiMK9A1doyV1TkUn8SIeER7CEF7iaSlxrx1g2q8F_A5XWeZWneykYMkNTiTmQ',
   ];
+
+  // RULE: Once game has started, no new players can join
+  if (room.gameStarted) {
+    const suggestedRoom = code === 'LOB0-77' ? 'LOBO-67' : 'NPC-1';
+    return res.json({
+      success: false,
+      gameInProgress: true,
+      suggestedRoom,
+      message: `La partida en la sala #${code} ya ha comenzado y las puertas del aquelarre están cerradas. No se admiten nuevos participantes en este aquelarre. Puedes abrir o unirte a la sala #${suggestedRoom}.`,
+      room: sanitizeRoomForPlayer(room, playerId),
+    });
+  }
 
   // Room capacity check (max 25 active players)
   if (room.players.length >= MAX_PLAYERS) {
@@ -909,12 +991,96 @@ app.post('/api/rooms/:roomCode/action', (req: Request, res: Response) => {
       break;
     }
 
+    case 'FILL_NPCS': {
+      if (room.gameStarted) break;
+      const targetCount = payload.targetCount ? Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, payload.targetCount)) : MIN_PLAYERS;
+      const needed = Math.max(0, targetCount - room.players.length);
+      for (let i = 0; i < needed; i++) {
+        const template = NPC_ROSTER[(room.players.length + i) % NPC_ROSTER.length];
+        room.players.push({
+          id: `p_npc_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 5)}`,
+          name: `${template.name.replace(' (NPC)', '')} (NPC)`,
+          avatarUrl: template.avatarUrl,
+          role: 'villager',
+          isAlive: true,
+          isReady: true,
+          votes: 0,
+          isBot: true,
+          disconnected: false,
+          lastPing: Date.now(),
+        });
+      }
+      room.deck = calculateBalancedDeck(room.players.length);
+      room.accusations.unshift({
+        id: `fill_npc_${Date.now()}`,
+        author: 'Sistema Guardián',
+        target: 'La Aldea',
+        message: `🤖 Se han añadido aldeanos NPC hasta completar ${room.players.length} habitantes. ¡El aquelarre está listo!`,
+        timestamp: 'Ahora',
+        severity: 'low',
+      });
+      break;
+    }
+
+    case 'VOTE_RESTART': {
+      if (!room.restartVotes) room.restartVotes = [];
+      const voterId = playerId;
+      if (room.restartVotes.includes(voterId)) {
+        room.restartVotes = room.restartVotes.filter((id) => id !== voterId);
+      } else {
+        room.restartVotes.push(voterId);
+      }
+
+      const totalPlayers = room.players.length;
+      const neededVotes = Math.ceil(totalPlayers * 0.5);
+
+      if (room.restartVotes.length >= neededVotes) {
+        room.gameStarted = false;
+        room.activeTab = 'lobby-sala';
+        room.nightNumber = 1;
+        room.dayNumber = 1;
+        room.restartVotes = [];
+        room.votes = {};
+        room.actionStartedAt = Date.now();
+        room.actionTimeRemaining = ACTION_TIMEOUT_SECONDS;
+        room.players = room.players.map((p) => ({
+          ...p,
+          isAlive: true,
+          votes: 0,
+          isProtected: false,
+          inspected: false,
+          deathCause: undefined,
+          deathNight: undefined,
+        }));
+        room.accusations.unshift({
+          id: `restart_vote_success_${Date.now()}`,
+          author: 'El Consejo de Villa Claraluna',
+          target: 'Todos',
+          message: `🔄 ¡El 50% o más de los jugadores (${room.restartVotes.length}/${totalPlayers}) ha votado reiniciar! Se abre una nueva partida.`,
+          timestamp: 'Ahora',
+          severity: 'high',
+        });
+      } else {
+        const voter = room.players.find((p) => p.id === voterId);
+        room.accusations.unshift({
+          id: `vote_rst_${Date.now()}`,
+          author: 'Petición de Reinicio',
+          target: voter?.name || 'Aldeano',
+          message: `🗳️ ${voter?.name || 'Un aldeano'} ha votado reiniciar (${room.restartVotes.length}/${neededVotes} necesarios para el 50%).`,
+          timestamp: 'Ahora',
+          severity: 'low',
+        });
+      }
+      break;
+    }
+
     case 'RESTART_GAME': {
       room.gameStarted = false;
       room.activeTab = 'lobby-sala';
       room.nightNumber = 1;
       room.dayNumber = 1;
       room.votes = {};
+      room.restartVotes = [];
       room.actionStartedAt = Date.now();
       room.actionTimeRemaining = ACTION_TIMEOUT_SECONDS;
       room.players = room.players.map((p) => ({

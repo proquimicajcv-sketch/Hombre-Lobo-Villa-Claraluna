@@ -776,16 +776,24 @@ export default function App() {
                 </span>
               </button>
 
-              <button
-                onClick={() => {
-                  playCardWhoosh();
-                  setViewingFichaPlayer(selectedPlayer);
-                }}
-                className="w-full py-2.5 rounded-xl bg-[#262a35] hover:bg-amber-950/70 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
-                <span>Ver Ficha Oficial (9:16)</span>
-              </button>
+              {/* Ficha Oficial 9:16 Preview - strictly private to each player in Online Sincro */}
+              {(gameMode === 'local' || selectedPlayer.id === currentUser.id) ? (
+                <button
+                  onClick={() => {
+                    playCardWhoosh();
+                    setViewingFichaPlayer(selectedPlayer);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-[#262a35] hover:bg-amber-950/70 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  <span>Ver Mi Ficha Oficial (9:16)</span>
+                </button>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-center text-xs text-zinc-400 flex items-center justify-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-amber-400">lock</span>
+                  <span>Identidad Secreta: Solo {selectedPlayer.name} conoce su carta.</span>
+                </div>
+              )}
 
               <button
                 onClick={() => {

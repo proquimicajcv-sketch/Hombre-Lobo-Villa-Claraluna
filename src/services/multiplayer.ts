@@ -20,6 +20,7 @@ export interface SyncedRoomState {
   actionStartedAt?: number;
   votes: Record<string, string>;
   waitingQueue?: Player[];
+  restartVotes?: string[];
   lastUpdated: number;
 }
 
@@ -116,6 +117,14 @@ export class MultiplayerService {
     return this.sendAction('TOGGLE_BOT_TAKEOVER', {
       targetPlayerId: targetPlayerId || this.playerId,
     });
+  }
+
+  public voteRestart() {
+    return this.sendAction('VOTE_RESTART');
+  }
+
+  public fillNpcs(targetCount?: number) {
+    return this.sendAction('FILL_NPCS', { targetCount });
   }
 
   public connect() {
