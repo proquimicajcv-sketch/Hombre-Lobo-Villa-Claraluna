@@ -1,0 +1,6 @@
+{
+  "name": "Aldea Maldita - Hombre Lobo",
+  "description": "Juego de deducción social gótico y hombre lobo con lobby interactivo, revelación de cartas del tarot, fases nocturnas y juicios diurnos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
