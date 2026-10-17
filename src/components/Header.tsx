@@ -6,6 +6,10 @@ interface HeaderProps {
   activeTab: ActiveTab;
   onOpenProfile: () => void;
   onOpenRoomCode: () => void;
+  roomCode?: string;
+  isOnline?: boolean;
+  connectedCount?: number;
+  actionTimeRemaining?: number;
 }
 
 const TAB_SUBTITLES: Record<ActiveTab, string> = {
@@ -15,7 +19,15 @@ const TAB_SUBTITLES: Record<ActiveTab, string> = {
   'aldea-juicio': 'CONSEJO / JUICIO',
 };
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, onOpenProfile, onOpenRoomCode }) => {
+export const Header: React.FC<HeaderProps> = ({
+  activeTab,
+  onOpenProfile,
+  onOpenRoomCode,
+  roomCode = 'LOB0-77',
+  isOnline = true,
+  connectedCount,
+  actionTimeRemaining,
+}) => {
   const [isMuted, setIsMuted] = React.useState(getMuteState());
 
   const handleToggleSound = () => {
@@ -50,21 +62,49 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onOpenProfile, onOpen
           </div>
         </div>
 
-        {/* Right Controls: Room Tag, Sound, Profile */}
+        {/* Right Controls: Action Timer, Room Tag, Sound, Profile */}
         <div className="flex items-center gap-2">
+          {/* 1-Minute Maximum Action Timer (Visible during active gameplay) */}
+          {activeTab !== 'lobby-sala' && actionTimeRemaining !== undefined && (
+            <div
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-mono font-bold shadow-sm transition-all ${
+                actionTimeRemaining <= 10
+                  ? 'bg-red-950/90 border-red-500 text-red-300 animate-pulse'
+                  : actionTimeRemaining <= 20
+                  ? 'bg-amber-950/70 border-amber-500 text-amber-300'
+                  : 'bg-[#171b26] border-white/10 text-white'
+              }`}
+              title="Tiempo máximo para ejercer acción (1 minuto)"
+            >
+              <span className="material-symbols-outlined text-[13px] text-amber-400">
+                timer
+              </span>
+              <span>{actionTimeRemaining}s</span>
+            </div>
+          )}
+
           {/* Room Pill */}
           <button
             onClick={() => {
               playClickSound();
               onOpenRoomCode();
             }}
-            className="px-2.5 py-1 rounded-full bg-[#262a35]/90 flex items-center gap-1.5 shadow-inner hover:bg-[#353944] transition-colors cursor-pointer"
-            title="Ver código de sala"
+            className="px-2.5 py-1 rounded-full bg-[#262a35]/90 flex items-center gap-1.5 shadow-inner hover:bg-[#353944] transition-colors cursor-pointer border border-[#4cd7f6]/20"
+            title="Ver código de sala y QR oficial"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4cd7f6] animate-pulse"></span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isOnline ? 'bg-[#4cd7f6] animate-pulse' : 'bg-amber-400'
+              }`}
+            ></span>
             <span className="text-[11px] text-[#4cd7f6] tracking-wider font-bold">
-              #LOB0-77
+              #{roomCode}
             </span>
+            {connectedCount !== undefined && connectedCount > 0 && (
+              <span className="text-[9px] bg-[#4cd7f6]/20 text-[#4cd7f6] px-1 rounded-full font-bold ml-0.5">
+                {connectedCount}
+              </span>
+            )}
           </button>
 
           {/* Sound Mute Toggle */}

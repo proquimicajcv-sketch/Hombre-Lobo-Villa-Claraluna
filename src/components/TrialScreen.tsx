@@ -19,6 +19,7 @@ interface TrialScreenProps {
   onHunterShoot: (targetId: string) => void;
   onStartNextNight: () => void;
   onResetGame: () => void;
+  onCastVote?: (targetId: string | null) => void;
 }
 
 export const TrialScreen: React.FC<TrialScreenProps> = ({
@@ -30,11 +31,12 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
   onHunterShoot,
   onStartNextNight,
   onResetGame,
+  onCastVote,
 }) => {
   const [selectedTargetId, setSelectedTargetId] = React.useState<string | null>(null);
   const [votedPlayerId, setVotedPlayerId] = React.useState<string | null>(null);
-  const [timerSeconds, setTimerSeconds] = React.useState(75);
-  const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+  const [timerSeconds, setTimerSeconds] = React.useState(60);
+  const [isTimerRunning, setIsTimerRunning] = React.useState(true);
   const [customAccusation, setCustomAccusation] = React.useState('');
   const [hunterShooting, setHunterShooting] = React.useState<Player | null>(null);
   const [isCodexOpen, setIsCodexOpen] = React.useState(false);
@@ -45,7 +47,7 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
   const isMuteDrunkard = currentUser.role === 'mute_drunkard';
   const mayorPlayer = players.find((p) => p.isMayor && p.isAlive);
 
-  // Countdown timer
+  // 1-Minute Maximum Countdown timer
   React.useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isTimerRunning && timerSeconds > 0) {
@@ -54,6 +56,13 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
           if (prev <= 1) {
             playChurchBell();
             setIsTimerRunning(false);
+            // 60-second limit reached: auto execute candidate with highest votes
+            const highestCandidate = [...players]
+              .filter((p) => p.isAlive)
+              .sort((a, b) => (b.votes || 0) - (a.votes || 0))[0];
+            if (highestCandidate && (highestCandidate.votes || 0) > 0) {
+              onLynchPlayer(highestCandidate.id);
+            }
             return 0;
           }
           return prev - 1;
@@ -61,7 +70,7 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning, timerSeconds]);
+  }, [isTimerRunning, timerSeconds, players]);
 
   const livingPlayers = players.filter((p) => p.isAlive);
   const deadPlayers = players.filter((p) => !p.isAlive);
@@ -90,16 +99,21 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
 
   // Calculate vote totals (Alcalde has 2x votes!)
   const getVotesForPlayer = (playerId: string) => {
-    let count = 0;
-    if (votedPlayerId === playerId) {
-      count += currentUser.isMayor ? 2 : 1;
+    const player = players.find((p) => p.id === playerId);
+    if (player?.votes && player.votes > 0) {
+      return player.votes;
     }
-    return count;
+    if (votedPlayerId === playerId) {
+      return currentUser.isMayor ? 2 : 1;
+    }
+    return 0;
   };
 
   const handleVote = (playerId: string) => {
     playClickSound();
-    setVotedPlayerId(playerId);
+    const nextTarget = votedPlayerId === playerId ? null : playerId;
+    setVotedPlayerId(nextTarget);
+    onCastVote?.(nextTarget);
   };
 
   const handleExecuteLynch = () => {

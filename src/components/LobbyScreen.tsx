@@ -15,6 +15,9 @@ interface LobbyScreenProps {
   players: Player[];
   deck: DeckConfig;
   gameMode: GameMode;
+  roomCode?: string;
+  waitingQueue?: Player[];
+  onSwitchRoom?: (roomCode: string) => void;
   onSetGameMode: (mode: GameMode) => void;
   onUpdateDeckCount: (role: keyof Omit<DeckConfig, 'targetPlayers'>, delta: number) => void;
   onSetPlayerCount: (count: number) => void;
@@ -23,6 +26,7 @@ interface LobbyScreenProps {
   onStartGame: () => void;
   onSelectPlayer: (player: Player) => void;
   onToggleMayor: (playerId: string) => void;
+  onToggleBotTakeover?: (playerId: string) => void;
   onUpdatePlayerName: (playerId: string, newName: string) => void;
   onShuffleRoles: () => void;
   onRandomizePlayerRole: (playerId: string) => void;
@@ -34,6 +38,9 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   players,
   deck,
   gameMode,
+  roomCode = 'LOB0-77',
+  waitingQueue = [],
+  onSwitchRoom,
   onSetGameMode,
   onUpdateDeckCount,
   onSetPlayerCount,
@@ -42,6 +49,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onStartGame,
   onSelectPlayer,
   onToggleMayor,
+  onToggleBotTakeover,
   onUpdatePlayerName,
   onShuffleRoles,
   onRandomizePlayerRole,
@@ -75,7 +83,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   const handleCopyInvite = () => {
     playClickSound();
-    navigator.clipboard?.writeText(window.location.origin + '?room=LOB0-77');
+    navigator.clipboard?.writeText(window.location.origin + '?room=' + roomCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -187,7 +195,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   Capacidad de la Villa
                 </span>
                 <span className="text-[11px] text-[#e6bdb8]">
-                  Desde 9 hasta 25 habitantes máximo
+                  Desde 7 hasta 25 habitantes máximo (Mínimo estricto 7)
                 </span>
               </div>
             </div>
@@ -196,11 +204,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
               <button
                 onClick={() => {
                   playClickSound();
-                  if (deck.targetPlayers > 9) {
+                  if (deck.targetPlayers > 7) {
                     onSetPlayerCount(deck.targetPlayers - 1);
                   }
                 }}
-                disabled={deck.targetPlayers <= 9}
+                disabled={deck.targetPlayers <= 7}
                 className="w-8 h-8 rounded-lg bg-[#262a35] hover:bg-[#353944] disabled:opacity-40 text-white flex items-center justify-center text-sm font-bold active:scale-95 transition-all cursor-pointer"
               >
                 -
@@ -230,7 +238,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mr-1 shrink-0">
               Frecuentes:
             </span>
-            {[9, 12, 15, 18, 20, 25].map((preset) => (
+            {[7, 9, 12, 15, 18, 20, 25].map((preset) => (
               <button
                 key={preset}
                 onClick={() => {
@@ -458,40 +466,138 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </div>
 
         {/* Room Code & Share Widget (Available for both mobile scan & sync) */}
-        <div className="p-3.5 rounded-xl bg-[#171b26] border border-white/5 shadow-md flex items-center justify-between gap-3">
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-[#e6bdb8] font-semibold">
-              {gameMode === 'online' ? 'Código del Aquelarre (Online)' : 'Código de Sala / QR Móvil'}
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-['Playfair_Display'] text-xl text-[#4cd7f6] tracking-widest font-bold">
-                LOB0-77
+        <div className="p-3.5 rounded-xl bg-[#171b26] border border-white/5 shadow-md flex flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-wider text-[#e6bdb8] font-semibold">
+                {gameMode === 'online' ? 'Código del Aquelarre (Online)' : 'Código de Sala / QR Móvil'}
               </span>
-              <span className="w-2 h-2 rounded-full bg-[#4cd7f6] animate-ping"></span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-['Playfair_Display'] text-xl text-[#4cd7f6] tracking-widest font-bold">
+                  {roomCode}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-[#4cd7f6] animate-ping"></span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyInvite}
+                className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center gap-1.5 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px] text-[#4cd7f6]">
+                  {copied ? 'done' : 'share'}
+                </span>
+                <span>{copied ? '¡Copiado!' : 'Invitar'}</span>
+              </button>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onOpenQr();
+                }}
+                className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[#ffb95f] flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Ver código QR oficial"
+              >
+                <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
+                <span>QR</span>
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCopyInvite}
-              className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center gap-1.5 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[16px] text-[#4cd7f6]">
-                {copied ? 'done' : 'share'}
-              </span>
-              <span>{copied ? '¡Copiado!' : 'Invitar'}</span>
-            </button>
-            <button
-              onClick={() => {
-                playClickSound();
-                onOpenQr();
-              }}
-              className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-[#ffb95f] flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-              title="Ver código QR oficial"
-            >
-              <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
-              <span>QR</span>
-            </button>
+
+          {/* Quick Room Switcher (LOB0-77 <-> LOBO-67) */}
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs flex-wrap gap-2">
+            <span className="text-[11px] text-zinc-400">
+              Salas oficiales:
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onSwitchRoom?.('LOB0-77');
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                  roomCode === 'LOB0-77'
+                    ? 'bg-[#4cd7f6] text-black shadow-sm'
+                    : 'bg-[#262a35] hover:bg-[#353944] text-white'
+                }`}
+              >
+                #LOB0-77
+              </button>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  onSwitchRoom?.('LOBO-67');
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                  roomCode === 'LOBO-67'
+                    ? 'bg-[#4cd7f6] text-black shadow-sm'
+                    : 'bg-[#262a35] hover:bg-[#353944] text-white'
+                }`}
+              >
+                #LOBO-67
+              </button>
+            </div>
           </div>
+
+          {/* Overflow Room 77 Notice & Waiting List Option */}
+          {players.length >= 25 && (
+            <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/80 via-[#262a35] to-amber-950/80 border border-amber-500/50 text-xs text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[22px] text-amber-400 animate-pulse">
+                  meeting_room
+                </span>
+                <div>
+                  <span className="font-bold text-white block">
+                    Sala #{roomCode} al máximo de capacidad (25/25)
+                  </span>
+                  <span className="text-[11px] text-amber-200/90">
+                    Los nuevos aldeanos pueden permanecer en lista de espera o abrir la sala <strong>#LOBO-67</strong>.
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => onSwitchRoom?.(roomCode === 'LOB0-77' ? 'LOBO-67' : 'LOB0-77')}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md transition-transform active:scale-95 cursor-pointer shrink-0"
+              >
+                Abrir o Pasar a #{roomCode === 'LOB0-77' ? 'LOBO-67' : 'LOB0-77'}
+              </button>
+            </div>
+          )}
+
+          {/* Waiting Queue List if any players are in queue */}
+          {waitingQueue && waitingQueue.length > 0 && (
+            <div className="p-3 rounded-xl bg-[#1c1f2a] border border-amber-500/30 shadow-md flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-amber-300 text-xs font-bold">
+                  <span className="material-symbols-outlined text-[16px]">hourglass_top</span>
+                  <span>Aldeanos en Espera ({waitingQueue.length} en cola de #{roomCode})</span>
+                </div>
+                <button
+                  onClick={() => onSwitchRoom?.('LOBO-67')}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[11px] font-bold cursor-pointer transition-colors shadow-sm"
+                >
+                  Abrir Sala #LOBO-67
+                </button>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {waitingQueue.map((wq, i) => (
+                  <div
+                    key={wq.id || i}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0a0e18] border border-white/5 text-[11px] shrink-0"
+                  >
+                    <span className="text-amber-400 font-bold">#{i + 1}</span>
+                    <img
+                      src={wq.avatarUrl}
+                      alt={wq.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                    <span className="text-zinc-300 font-medium truncate max-w-[90px]">
+                      {wq.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Villagers in Waiting Grid (Online Sincro mode) */}
@@ -503,10 +609,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   group
                 </span>
                 <span className="text-xs uppercase tracking-wider font-bold text-white">
-                  Aldeanos en Espera
+                  Aldeanos en Espera (Mín 7 - Máx 25)
                 </span>
               </div>
-              <span className="text-[11px] text-[#4cd7f6] bg-[#03b5d3]/15 border border-[#4cd7f6]/30 px-2.5 py-0.5 rounded-full font-bold">
+              <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold border ${
+                players.length >= 7 ? 'text-[#4cd7f6] bg-[#03b5d3]/15 border-[#4cd7f6]/30' : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+              }`}>
                 {players.length} / {deck.targetPlayers} Conectados
               </span>
             </div>
@@ -523,6 +631,14 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                   }`}
                 >
                   <div className="absolute top-1 right-1 flex items-center gap-0.5">
+                    {player.isBot && (
+                      <span
+                        className="text-amber-300 text-[10px] font-bold bg-black/70 px-1 rounded"
+                        title="Modo Guardián (Bot automático por desconexión)"
+                      >
+                        🤖
+                      </span>
+                    )}
                     {player.isMayor && (
                       <span
                         className="text-[#ffb95f] material-symbols-outlined text-[14px]"
@@ -548,11 +664,20 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                       alt={player.name}
                       referrerPolicy="no-referrer"
                     />
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#4cd7f6] ring-2 ring-[#1c1f2a]"></span>
+                    <span
+                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#1c1f2a] ${
+                        player.isBot ? 'bg-amber-400' : 'bg-[#4cd7f6]'
+                      }`}
+                    ></span>
                   </div>
                   <span className="text-xs text-[#dfe2f1] font-semibold truncate max-w-full text-center">
                     {player.name}
                   </span>
+                  {player.isBot && (
+                    <span className="text-[8px] text-amber-300 bg-amber-500/20 px-1 rounded font-bold uppercase tracking-wider">
+                      Guardián
+                    </span>
+                  )}
                   {player.isMayor && (
                     <span className="text-[9px] text-[#ffddb8] font-bold uppercase tracking-wider">
                       Alcalde (x2)
@@ -719,11 +844,20 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
         {/* Main Glorious Action Button */}
         <div className="flex flex-col gap-2 pt-1">
+          {players.length < 7 && (
+            <div className="p-2.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-amber-400 shrink-0">info</span>
+              <span>
+                <strong>Regla de Villa Claraluna:</strong> Se requiere un mínimo de <strong>7 jugadores activos</strong> para iniciar (Actualmente: {players.length}/7). Invita a más aldeanos compartiendo el enlace o código QR.
+              </span>
+            </div>
+          )}
+
           <button
             onClick={handleTriggerStart}
-            disabled={!isBalanced || isConjuring}
+            disabled={!isBalanced || isConjuring || players.length < 7}
             className={`w-full py-4 px-6 rounded-xl text-white font-['Playfair_Display'] text-lg font-bold text-center transition-all flex items-center justify-center gap-3 relative overflow-hidden cursor-pointer ${
-              isBalanced && !isConjuring
+              isBalanced && !isConjuring && players.length >= 7
                 ? 'bg-gradient-to-r from-[#bf0715] via-[#dc2626] to-[#bf0715] shadow-[0_0_28px_rgba(220,38,38,0.45)] hover:shadow-[0_0_36px_rgba(220,38,38,0.65)] active:scale-[0.98]'
                 : 'bg-zinc-800 text-zinc-500 opacity-60 cursor-not-allowed'
             }`}

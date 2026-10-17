@@ -72,9 +72,12 @@ export const NightScreen: React.FC<NightScreenProps> = ({
   const hasWitchAlive = livingPlayers.some((p) => p.role === 'witch');
   const hasLittleGirlAlive = livingPlayers.some((p) => p.role === 'little_girl');
 
+  const [stepTimer, setStepTimer] = React.useState<number>(60);
+
   const handleStepTransition = (nextStep: NightStep) => {
     playClickSound();
     setCurrentStep(nextStep);
+    setStepTimer(60);
 
     if (nextStep === 'cupid') {
       playMysticChime();
@@ -87,6 +90,66 @@ export const NightScreen: React.FC<NightScreenProps> = ({
       resolveDawn();
     }
   };
+
+  // 1-minute maximum action countdown per night phase & bot auto-actions
+  React.useEffect(() => {
+    setStepTimer(60);
+    const interval = setInterval(() => {
+      setStepTimer((prev) => {
+        if (prev <= 1) {
+          if (currentStep === 'sleep') {
+            if (nightNumber === 1 && hasCupidAlive) handleStepTransition('cupid');
+            else if (hasSeerAlive) handleStepTransition('seer');
+            else handleStepTransition('werewolves');
+          } else if (currentStep === 'cupid') {
+            if (hasSeerAlive) handleStepTransition('seer');
+            else handleStepTransition('werewolves');
+          } else if (currentStep === 'seer') {
+            handleStepTransition('werewolves');
+          } else if (currentStep === 'werewolves') {
+            // Auto-resolve wolf attack if not chosen within 1 minute
+            if (!wolfTargetId) {
+              const nonWolves = livingPlayers.filter(
+                (p) => p.role !== 'werewolf' && p.role !== 'alfa_werewolf'
+              );
+              if (nonWolves.length > 0) {
+                const autoTarget = nonWolves[Math.floor(Math.random() * nonWolves.length)];
+                setWolfTargetId(autoTarget.id);
+              }
+            }
+            if (hasAlfaAlive && deadPlayers.length > 0 && !alfaUsed) handleStepTransition('alfa_resurrect');
+            else if (hasLittleGirlAlive) handleStepTransition('little_girl');
+            else if (hasWitchAlive) handleStepTransition('witch');
+            else if (hasDoctorAlive) handleStepTransition('doctor');
+            else handleStepTransition('dawn');
+          } else if (currentStep === 'alfa_resurrect') {
+            if (hasLittleGirlAlive) handleStepTransition('little_girl');
+            else if (hasWitchAlive) handleStepTransition('witch');
+            else if (hasDoctorAlive) handleStepTransition('doctor');
+            else handleStepTransition('dawn');
+          } else if (currentStep === 'little_girl') {
+            if (hasWitchAlive) handleStepTransition('witch');
+            else if (hasDoctorAlive) handleStepTransition('doctor');
+            else handleStepTransition('dawn');
+          } else if (currentStep === 'witch') {
+            if (hasDoctorAlive) handleStepTransition('doctor');
+            else handleStepTransition('dawn');
+          } else if (currentStep === 'doctor') {
+            if (!doctorTargetId) {
+              const randomProtect = livingPlayers[Math.floor(Math.random() * livingPlayers.length)];
+              if (randomProtect) setDoctorTargetId(randomProtect.id);
+            }
+            handleStepTransition('dawn');
+          } else if (currentStep === 'dawn') {
+            onGoToTrial();
+          }
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [currentStep, nightNumber, livingPlayers.length, wolfTargetId, doctorTargetId]);
 
   const resolveDawn = () => {
     // Determine who was saved:
@@ -188,6 +251,19 @@ export const NightScreen: React.FC<NightScreenProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* 1-Minute Maximum Action Timer */}
+            <div
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-mono font-bold shadow-sm transition-all ${
+                stepTimer <= 10
+                  ? 'bg-red-950/80 border-red-500 text-red-300 animate-pulse'
+                  : 'bg-black/60 border-amber-500/40 text-amber-300'
+              }`}
+              title="Tiempo máximo para ejercer acción nocturna (1 minuto)"
+            >
+              <span className="material-symbols-outlined text-[14px]">timer</span>
+              <span>{stepTimer}s (Máx 1m)</span>
+            </div>
+
             <button
               onClick={() => {
                 playClickSound();

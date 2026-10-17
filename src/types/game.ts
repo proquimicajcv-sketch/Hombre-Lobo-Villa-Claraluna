@@ -39,6 +39,8 @@ export interface Player {
   loverId?: string; // id of their beloved
   isProtected?: boolean; // Doctor protected
   inspected?: boolean; // Seer inspected
+  isBot?: boolean; // Automated by system if player disconnects
+  disconnected?: boolean; // Whether original player lost connection
   deathCause?: 'werewolf' | 'lynched' | 'heartbreak' | 'witch_poison' | 'hunter_shot';
   deathNight?: number;
 }
@@ -54,7 +56,7 @@ export interface DeckConfig {
   witch: number;
   hunter: number;
   villagers: number;
-  targetPlayers: number; // 9 to 25
+  targetPlayers: number; // 7 to 25
 }
 
 export type ActiveTab = 'lobby-sala' | 'mi-carta' | 'noche' | 'aldea-juicio';

@@ -377,65 +377,84 @@ export const INITIAL_DECK: DeckConfig = {
 };
 
 export function calculateBalancedDeck(playerCount: number): DeckConfig {
-  const count = Math.max(9, Math.min(25, playerCount));
-  if (count <= 9) {
-    return {
-      werewolves: 1,
-      alfa_werewolf: 1,
-      doctor: 1,
-      seer: 1,
-      cupid: 1,
-      little_girl: 1,
-      mute_drunkard: 1,
-      witch: 1,
-      hunter: 0,
-      villagers: 1,
-      targetPlayers: count,
-    };
+  const count = Math.max(7, Math.min(25, playerCount));
+
+  // Reglas estrictas solicitadas por el usuario:
+  // - 1 Niña Fizgona (little_girl) obligatoria
+  // - 1 Médico (doctor) obligatorio
+  // - 1 Bruja (witch) obligatoria
+  const little_girl = 1;
+  const doctor = 1;
+  const witch = 1;
+
+  // - ~20% de Lobos (al menos 2: 1 Lobo Alfa + Lobos comunes)
+  const totalWolves = Math.max(2, Math.round(count * 0.2));
+  const alfa_werewolf = 1;
+  const werewolves = totalWolves - 1;
+
+  // - ~30% de Aldeanos comunes
+  let villagers = Math.max(2, Math.round(count * 0.3));
+
+  // - Restante se completa con Vidente, Cupido, Cazador, Borracho Mudo
+  let remaining = count - (totalWolves + little_girl + doctor + witch + villagers);
+
+  let seer = 0;
+  let cupid = 0;
+  let hunter = 0;
+  let mute_drunkard = 0;
+
+  if (remaining > 0) {
+    seer = 1;
+    remaining--;
   }
-  if (count <= 12) {
-    return {
-      werewolves: 2,
-      alfa_werewolf: 1,
-      doctor: 1,
-      seer: 1,
-      cupid: 1,
-      little_girl: 1,
-      mute_drunkard: 1,
-      witch: 1,
-      hunter: 1,
-      villagers: count - 10,
-      targetPlayers: count,
-    };
+  if (remaining > 0) {
+    cupid = 1;
+    remaining--;
   }
-  if (count <= 16) {
-    return {
-      werewolves: 3,
-      alfa_werewolf: 1,
-      doctor: 1,
-      seer: 1,
-      cupid: 1,
-      little_girl: 1,
-      mute_drunkard: 1,
-      witch: 1,
-      hunter: 1,
-      villagers: count - 11,
-      targetPlayers: count,
-    };
+  if (remaining > 0) {
+    hunter = 1;
+    remaining--;
   }
-  // 17 to 25 players
-  const wolves = Math.floor(count / 4);
+  if (remaining > 0) {
+    mute_drunkard = 1;
+    remaining--;
+  }
+
+  // Cualquier espacio adicional se asigna a aldeanos comunes
+  if (remaining > 0) {
+    villagers += remaining;
+  } else if (remaining < 0) {
+    villagers = Math.max(1, villagers + remaining);
+  }
+
+  // Asegurar cuadre exacto al total de jugadores
+  const sum =
+    werewolves +
+    alfa_werewolf +
+    doctor +
+    seer +
+    cupid +
+    little_girl +
+    mute_drunkard +
+    witch +
+    hunter +
+    villagers;
+
+  if (sum !== count) {
+    villagers += count - sum;
+  }
+
   return {
-    werewolves: wolves - 1,
-    alfa_werewolf: 1,
-    doctor: 1,
-    seer: 1,
-    cupid: 1,
-    little_girl: 1,
-    mute_drunkard: 1,
-    witch: 1,
-    hunter: 1,
-    villagers: count - (wolves + 7),
+    werewolves,
+    alfa_werewolf,
+    doctor,
+    seer,
+    cupid,
+    little_girl,
+    mute_drunkard,
+    witch,
+    hunter,
+    villagers,
     targetPlayers: count,
   };
 }
