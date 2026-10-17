@@ -10,6 +10,9 @@ import {
   getCardVisibilitySettings,
   updateCardVisibilitySettings,
   CardVisibilitySettings,
+  exportCardsBackup,
+  importCardsBackup,
+  getCardsJsonString,
 } from '../utils/customCards';
 
 interface OfficialCodexModalProps {
@@ -47,10 +50,43 @@ export const OfficialCodexModal: React.FC<OfficialCodexModalProps> = ({
   const [visibilitySettings, setVisibilitySettings] = useState<CardVisibilitySettings>(
     getCardVisibilitySettings()
   );
+  const [showVault, setShowVault] = useState<boolean>(false);
+  const [copyFeedback, setCopyFeedback] = useState<string>('');
+  const [importText, setImportText] = useState<string>('');
 
   const reloadImages = () => {
     setCustomImages(getCustomCardImages());
     setVisibilitySettings(getCardVisibilitySettings());
+  };
+
+  const handleCopyJson = () => {
+    playClickSound();
+    const str = getCardsJsonString();
+    navigator.clipboard.writeText(str);
+    setCopyFeedback('¡JSON de Cartas Copiado al Portapapeles!');
+    setTimeout(() => setCopyFeedback(''), 3500);
+  };
+
+  const handleDownloadBackup = () => {
+    playClickSound();
+    exportCardsBackup();
+    setCopyFeedback('¡Archivo de respaldo descargado!');
+    setTimeout(() => setCopyFeedback(''), 3500);
+  };
+
+  const handleImportJson = () => {
+    if (!importText.trim()) return;
+    playClickSound();
+    const success = importCardsBackup(importText.trim());
+    if (success) {
+      setImportText('');
+      setCopyFeedback('¡Cartas restauradas con éxito!');
+      reloadImages();
+      setTimeout(() => setCopyFeedback(''), 3500);
+    } else {
+      setCopyFeedback('Formato JSON inválido');
+      setTimeout(() => setCopyFeedback(''), 3500);
+    }
   };
 
   const handleToggleHideSealsAlways = () => {
@@ -293,6 +329,44 @@ export const OfficialCodexModal: React.FC<OfficialCodexModalProps> = ({
               </label>
             </div>
 
+            {/* Display current active URL and tester */}
+            {customImages[selectedRole] && (
+              <div className="mt-2 p-2 rounded-xl bg-black/60 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px]">
+                <div className="flex items-center gap-1.5 min-w-0 max-w-full">
+                  <span className="material-symbols-outlined text-amber-400 text-[14px] shrink-0">link</span>
+                  <span className="text-zinc-400 shrink-0 font-semibold">URL Activa:</span>
+                  <span className="font-mono text-white truncate max-w-xs sm:max-w-md">
+                    {customImages[selectedRole]}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={customImages[selectedRole]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2 py-1 rounded bg-[#262a35] hover:bg-[#353944] text-[#4cd7f6] font-bold flex items-center gap-1 transition-colors"
+                    title="Abre la URL en una pestaña nueva para comprobar si GitHub la muestra o da 404"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                    <span>Probar en pestaña</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* GitHub Troubleshooting tip */}
+            <div className="mt-2 p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-start gap-2">
+              <span className="material-symbols-outlined text-amber-400 text-[18px] shrink-0 mt-0.5">help</span>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-bold text-amber-300">¿Por qué puede no verse la imagen de GitHub?</span>
+                <span className="text-[10px] text-zinc-300">
+                  1. En GitHub, tu repositorio <strong>debe ser PÚBLICO</strong>. Si es privado, GitHub bloquea el enlace RAW y no se puede mostrar en la web.<br />
+                  2. Si no deseas hacer público tu repositorio de GitHub, usa el botón <strong>"Subir archivo"</strong> para cargar la imagen directamente desde tu equipo. ¡Eso funciona al 100% sin depender de GitHub!
+                </span>
+              </div>
+            </div>
+
             {/* Visibility & Seal display options */}
             <div className="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div className="flex items-center gap-1.5 text-emerald-300 font-medium">
@@ -341,6 +415,82 @@ export const OfficialCodexModal: React.FC<OfficialCodexModalProps> = ({
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Bóveda de Respaldo y Salvaguarda de URLs */}
+            <div className="mt-2.5 pt-2 border-t border-amber-500/30 flex flex-col gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-amber-400 text-[16px]">lock</span>
+                  <span className="font-bold text-white text-[11px]">
+                    Bóveda de Respaldo: <span className="text-amber-300">{Object.keys(customImages).length} de 10 cartas blindadas</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-500/50 text-emerald-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Descarga un archivo .json de respaldo en tu dispositivo para no perder nunca tus cartas"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">download</span>
+                    <span>Descargar Respaldo JSON</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyJson}
+                    className="px-2.5 py-1 rounded-lg bg-sky-950/70 hover:bg-sky-900/70 border border-sky-500/50 text-sky-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Copia el JSON al portapapeles para guardarlo o compartirlo"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                    <span>Copiar JSON</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowVault(!showVault)}
+                    className="px-2.5 py-1 rounded-lg bg-[#262a35] hover:bg-[#353944] border border-white/10 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">
+                      {showVault ? 'expand_less' : 'restore'}
+                    </span>
+                    <span>{showVault ? 'Cerrar' : 'Restaurar'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {copyFeedback && (
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[11px] font-semibold text-center animate-fadeIn">
+                  {copyFeedback}
+                </div>
+              )}
+
+              {showVault && (
+                <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 flex flex-col gap-2 animate-fadeIn">
+                  <span className="text-[10px] text-zinc-300 font-semibold">
+                    Pega el contenido JSON de tu respaldo para restaurar todas tus cartas instantáneamente:
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={importText}
+                    onChange={(e) => setImportText(e.target.value)}
+                    placeholder='{"alfa_werewolf": "https://raw.githubusercontent.com/...", ...}'
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-[#0e111a] border border-white/10 text-white font-mono text-[10px] focus:outline-none focus:border-amber-400"
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={handleImportJson}
+                      disabled={!importText.trim()}
+                      className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-black font-bold text-xs cursor-pointer transition-colors"
+                    >
+                      Restaurar Ahora
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

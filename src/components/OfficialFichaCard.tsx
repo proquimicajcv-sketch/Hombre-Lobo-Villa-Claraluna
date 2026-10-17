@@ -51,6 +51,7 @@ export const OfficialFichaCard: React.FC<OfficialFichaCardProps> = ({
   forceCleanArt,
 }) => {
   const [customImage, setCustomImage] = useState<string | undefined>(customImageUrl);
+  const [imgError, setImgError] = useState<boolean>(false);
   const [visibilitySettings, setVisibilitySettings] = useState<CardVisibilitySettings>(
     getCardVisibilitySettings()
   );
@@ -59,6 +60,7 @@ export const OfficialFichaCard: React.FC<OfficialFichaCardProps> = ({
   );
 
   useEffect(() => {
+    setImgError(false);
     if (customImageUrl) {
       setCustomImage(customImageUrl);
       return;
@@ -82,12 +84,12 @@ export const OfficialFichaCard: React.FC<OfficialFichaCardProps> = ({
   const isWolfSide = roleInfo.allegiance === 'werewolves';
   const serialNo = ROLE_NUMBERS[role] || '№ CLARA-00';
 
-  // Rule: If custom image is uploaded, NEVER show the seal medallion unless explicitly overridden with showSeal === true.
-  // Also respect hideSealsAlways from settings.
+  // Rule: If custom image is uploaded and loaded successfully, NEVER show the seal medallion.
+  // If the image fails to load, show seal as graceful fallback.
   const shouldRenderSeal =
     showSeal !== undefined
       ? showSeal
-      : customImage
+      : customImage && !imgError
       ? false
       : !visibilitySettings.hideSealsAlways;
 
@@ -189,11 +191,14 @@ export const OfficialFichaCard: React.FC<OfficialFichaCardProps> = ({
           }`}
         >
           {/* Custom Illustration Layer: 100% VISIBLE, NO WASHED-OUT OPACITY */}
-          {customImage ? (
+          {customImage && !imgError ? (
             <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none">
               <img
                 src={customImage}
-                alt={roleInfo.name}
+                alt=""
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+                onLoad={() => setImgError(false)}
                 className={`w-full h-full ${
                   visibilitySettings.fitMode === 'contain'
                     ? 'object-contain'
@@ -299,7 +304,22 @@ export const OfficialFichaCard: React.FC<OfficialFichaCardProps> = ({
           {/* Central Section: Center is completely unobstructed if custom card is present!
               If no custom card, renders ArcaneSeal medallion if shouldRenderSeal is true. */}
           <div className="relative z-20 flex flex-col items-center text-center my-auto px-1">
-            {/* ONLY RENDER ARCANE SEAL WHEN shouldRenderSeal IS TRUE (NEVER IF CUSTOM CARD IS LOADED) */}
+            {/* Warning if custom image failed to load from GitHub */}
+            {imgError && customImage && (
+              <div className="p-2.5 mb-2 rounded-xl bg-red-950/90 border border-red-500/80 text-center max-w-[250px] shadow-lg animate-fadeIn">
+                <span className="material-symbols-outlined text-red-400 text-[20px] block mx-auto mb-0.5">
+                  broken_image
+                </span>
+                <span className="text-[11px] text-red-200 font-bold block leading-tight">
+                  No se pudo cargar la imagen de GitHub
+                </span>
+                <span className="text-[9px] text-zinc-300 block mt-1 leading-snug">
+                  Verifica que el repositorio sea <strong>PÚBLICO</strong>. Si es privado, GitHub bloquea el enlace. O sube el archivo con el botón "Subir archivo".
+                </span>
+              </div>
+            )}
+
+            {/* ONLY RENDER ARCANE SEAL WHEN shouldRenderSeal IS TRUE (NEVER IF CUSTOM CARD IS LOADED AND VALID) */}
             {shouldRenderSeal && (
               <div className="mb-2 transition-all">
                 <ArcaneSeal role={role} size="xl" showGlow={true} />
