@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Controls: Action Timer, Room Tag, Sound, Profile */}
         <div className="flex items-center gap-2">
-          {/* 1-Minute Maximum Action Timer (Visible during active gameplay) */}
+          {/* Two-minute maximum action timer (visible during active gameplay) */}
           {activeTab !== 'lobby-sala' && actionTimeRemaining !== undefined && (
             <div
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-mono font-bold shadow-sm transition-all ${
@@ -74,12 +74,15 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-amber-950/70 border-amber-500 text-amber-300'
                   : 'bg-[#171b26] border-white/10 text-white'
               }`}
-              title="Tiempo máximo para ejercer acción (1 minuto)"
+              title="Tiempo máximo para ejercer acción (2 minutos)"
             >
               <span className="material-symbols-outlined text-[13px] text-amber-400">
                 timer
               </span>
-              <span>{actionTimeRemaining}s</span>
+              <span>
+                {Math.floor(actionTimeRemaining / 60)}:
+                {String(actionTimeRemaining % 60).padStart(2, '0')}
+              </span>
             </div>
           )}
 

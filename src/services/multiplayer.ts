@@ -18,7 +18,6 @@ export interface SyncedRoomState {
   gameStarted: boolean;
   actionTimeRemaining?: number;
   actionStartedAt?: number;
-  votes: Record<string, string>;
   waitingQueue?: Player[];
   restartVotes?: string[];
   lastUpdated: number;
