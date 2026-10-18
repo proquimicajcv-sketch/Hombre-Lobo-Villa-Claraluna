@@ -85,8 +85,8 @@ export interface RoomState {
   accusations: AccusationEntry[];
   selectedPlayerId: string | null;
   gameStarted: boolean;
-  actionStartedAt: number; // Timestamp of current phase start for 60s timer
-  actionTimeRemaining: number; // 0 to 60 seconds
+  actionStartedAt: number; // Timestamp of current phase start
+  actionTimeRemaining: number; // 0 to ACTION_TIMEOUT_SECONDS
   votes: Record<string, string>; // voterId -> targetId
   nightVotes: {
     wolfVotes: Record<string, string>;
@@ -104,7 +104,7 @@ export interface RoomState {
 
 export const MIN_PLAYERS = 7;
 export const MAX_PLAYERS = 25;
-export const ACTION_TIMEOUT_SECONDS = 60;
+export const ACTION_TIMEOUT_SECONDS = 120;
 
 export const NPC_ROSTER = [
   {
@@ -294,7 +294,10 @@ const getOrCreateRoom = (roomCode: string, initialHostName?: string): RoomState 
 
 // Sanitize room data for client: ONLY player's own card is visible!
 // Host is virtual/system and CANNOT peek at others' cards.
-const sanitizeRoomForPlayer = (room: RoomState, playerId?: string): RoomState => {
+const sanitizeRoomForPlayer = (
+  room: RoomState,
+  playerId?: string
+): Omit<RoomState, 'nightVotes' | 'votes'> => {
   const player = room.players.find((p) => p.id === playerId);
   const isWolf = player?.role === 'werewolf' || player?.role === 'alfa_werewolf';
 
@@ -322,8 +325,10 @@ const sanitizeRoomForPlayer = (room: RoomState, playerId?: string): RoomState =>
     };
   });
 
+  const { nightVotes: _nightVotes, votes: _votes, ...publicRoom } = room;
+
   return {
-    ...room,
+    ...publicRoom,
     players: sanitizedPlayers,
   };
 };
@@ -370,7 +375,7 @@ const broadcastRoom = (room: RoomState) => {
 // BOT ENGINE & DISCONNECTION TAKEOVER
 // If a player disconnects, system marks isBot = true immediately and executes
 // their actions automatically so the game continues without pause.
-// If 1-minute timer expires, system auto-resolves pending decisions.
+// If the action timer expires, the system auto-resolves pending decisions.
 // ============================================================================
 setInterval(() => {
   const now = Date.now();
@@ -397,7 +402,7 @@ setInterval(() => {
       });
     }
 
-    // 2. 1-Minute Action Timer check
+    // 2. Action timer check
     if (room.gameStarted) {
       const elapsedSec = Math.floor((now - room.actionStartedAt) / 1000);
       const remaining = Math.max(0, ACTION_TIMEOUT_SECONDS - elapsedSec);
@@ -407,7 +412,7 @@ setInterval(() => {
       }
 
       // 3. Bot fast auto-pilot: If all deciding players in current phase are bots,
-      // auto-act within 5s instead of forcing humans to wait 60 seconds
+      // auto-act within 5s instead of forcing humans to wait for the full timer
       if (room.activeTab === 'noche') {
         const livingWolves = room.players.filter(
           (p) => p.isAlive && (p.role === 'werewolf' || p.role === 'alfa_werewolf')
@@ -434,7 +439,7 @@ setInterval(() => {
         }
       }
 
-      // If 1 minute expired without host/player completing action, execute bot fallback!
+      // If the timer expires without host/player completing the action, execute bot fallback!
       if (remaining === 0) {
         room.actionStartedAt = now;
         room.actionTimeRemaining = ACTION_TIMEOUT_SECONDS;
@@ -865,7 +870,7 @@ app.post('/api/rooms/:roomCode/action', (req: Request, res: Response) => {
         id: `start_${Date.now()}`,
         author: 'El Heraldo',
         target: 'Todos',
-        message: '¡Las cartas del destino han sido repartidas! Tienes 1 minuto por acción para decidir.',
+        message: '¡Las cartas del destino han sido repartidas! Tienes hasta 2 minutos por acción para decidir.',
         timestamp: 'Ahora',
         severity: 'high',
       });

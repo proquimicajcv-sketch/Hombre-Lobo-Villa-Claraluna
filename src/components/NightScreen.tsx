@@ -72,12 +72,12 @@ export const NightScreen: React.FC<NightScreenProps> = ({
   const hasWitchAlive = livingPlayers.some((p) => p.role === 'witch');
   const hasLittleGirlAlive = livingPlayers.some((p) => p.role === 'little_girl');
 
-  const [stepTimer, setStepTimer] = React.useState<number>(60);
+  const [stepTimer, setStepTimer] = React.useState<number>(120);
 
   const handleStepTransition = (nextStep: NightStep) => {
     playClickSound();
     setCurrentStep(nextStep);
-    setStepTimer(60);
+    setStepTimer(120);
 
     if (nextStep === 'cupid') {
       playMysticChime();
@@ -91,9 +91,9 @@ export const NightScreen: React.FC<NightScreenProps> = ({
     }
   };
 
-  // 1-minute maximum action countdown per night phase & bot auto-actions
+  // Two-minute maximum action countdown per night phase & bot auto-actions
   React.useEffect(() => {
-    setStepTimer(60);
+    setStepTimer(120);
     const interval = setInterval(() => {
       setStepTimer((prev) => {
         if (prev <= 1) {
@@ -107,7 +107,7 @@ export const NightScreen: React.FC<NightScreenProps> = ({
           } else if (currentStep === 'seer') {
             handleStepTransition('werewolves');
           } else if (currentStep === 'werewolves') {
-            // Auto-resolve wolf attack if not chosen within 1 minute
+            // Auto-resolve wolf attack if not chosen within 2 minutes
             if (!wolfTargetId) {
               const nonWolves = livingPlayers.filter(
                 (p) => p.role !== 'werewolf' && p.role !== 'alfa_werewolf'
@@ -143,7 +143,7 @@ export const NightScreen: React.FC<NightScreenProps> = ({
           } else if (currentStep === 'dawn') {
             onGoToTrial();
           }
-          return 60;
+          return 120;
         }
         return prev - 1;
       });
@@ -251,17 +251,19 @@ export const NightScreen: React.FC<NightScreenProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {/* 1-Minute Maximum Action Timer */}
+            {/* Two-minute maximum action timer */}
             <div
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-mono font-bold shadow-sm transition-all ${
                 stepTimer <= 10
                   ? 'bg-red-950/80 border-red-500 text-red-300 animate-pulse'
                   : 'bg-black/60 border-amber-500/40 text-amber-300'
               }`}
-              title="Tiempo máximo para ejercer acción nocturna (1 minuto)"
+              title="Tiempo máximo para ejercer acción nocturna (2 minutos)"
             >
               <span className="material-symbols-outlined text-[14px]">timer</span>
-              <span>{stepTimer}s (Máx 1m)</span>
+              <span>
+                {Math.floor(stepTimer / 60)}:{String(stepTimer % 60).padStart(2, '0')} (Máx 2m)
+              </span>
             </div>
 
             <button

@@ -60,7 +60,7 @@ export default function App() {
   // Real-Time Multiplayer State
   const [roomCode, setRoomCode] = useState<string>(multiplayer.getRoomCode());
   const [connStatus, setConnStatus] = useState<ConnectionStatus>('connecting');
-  const [actionTimeRemaining, setActionTimeRemaining] = useState<number>(60);
+  const [actionTimeRemaining, setActionTimeRemaining] = useState<number>(120);
   const [waitingQueue, setWaitingQueue] = useState<Player[]>([]);
   const [toastError, setToastError] = useState<string | null>(null);
   const [roomFullNotice, setRoomFullNotice] = useState<{

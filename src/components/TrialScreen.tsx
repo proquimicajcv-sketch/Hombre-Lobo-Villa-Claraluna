@@ -35,7 +35,7 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
 }) => {
   const [selectedTargetId, setSelectedTargetId] = React.useState<string | null>(null);
   const [votedPlayerId, setVotedPlayerId] = React.useState<string | null>(null);
-  const [timerSeconds, setTimerSeconds] = React.useState(60);
+  const [timerSeconds, setTimerSeconds] = React.useState(120);
   const [isTimerRunning, setIsTimerRunning] = React.useState(true);
   const [customAccusation, setCustomAccusation] = React.useState('');
   const [hunterShooting, setHunterShooting] = React.useState<Player | null>(null);
@@ -47,7 +47,7 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
   const isMuteDrunkard = currentUser.role === 'mute_drunkard';
   const mayorPlayer = players.find((p) => p.isMayor && p.isAlive);
 
-  // 1-Minute Maximum Countdown timer
+  // Two-minute maximum countdown timer
   React.useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isTimerRunning && timerSeconds > 0) {
@@ -56,7 +56,7 @@ export const TrialScreen: React.FC<TrialScreenProps> = ({
           if (prev <= 1) {
             playChurchBell();
             setIsTimerRunning(false);
-            // 60-second limit reached: auto execute candidate with highest votes
+            // Time limit reached: auto execute candidate with highest votes
             const highestCandidate = [...players]
               .filter((p) => p.isAlive)
               .sort((a, b) => (b.votes || 0) - (a.votes || 0))[0];

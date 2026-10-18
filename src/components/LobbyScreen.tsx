@@ -63,6 +63,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onVoteRestart,
 }) => {
   const [copied, setCopied] = React.useState(false);
+  const [copyError, setCopyError] = React.useState(false);
   const [isConjuring, setIsConjuring] = React.useState(false);
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
   const [showRolesInLocalMode, setShowRolesInLocalMode] = useState(false);
@@ -87,11 +88,25 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
   const currentMayor = players.find((p) => p.isMayor);
 
-  const handleCopyInvite = () => {
+  const handleCopyInvite = async () => {
     playClickSound();
-    navigator.clipboard?.writeText(window.location.origin + '?room=' + roomCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(false);
+    setCopyError(false);
+
+    try {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API is unavailable');
+      }
+
+      await navigator.clipboard.writeText(
+        `${window.location.origin}?room=${encodeURIComponent(roomCode)}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 4000);
+    }
   };
 
   const handleTriggerStart = () => {
@@ -488,6 +503,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyInvite}
+                aria-label={copied ? 'Enlace de invitación copiado' : 'Copiar enlace de invitación'}
                 className="px-3 py-2 rounded-lg bg-[#262a35] hover:bg-[#353944] text-white flex items-center gap-1.5 text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px] text-[#4cd7f6]">
@@ -508,6 +524,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
               </button>
             </div>
           </div>
+          {copyError && (
+            <p role="status" className="text-xs text-[#ffb4ab]">
+              No se pudo copiar el enlace. Puedes invitar con el código QR.
+            </p>
+          )}
+        </div>
 
           {/* Quick Room Switcher (LOB0-77 <-> LOBO-67 <-> NPC-1 <-> NPC-2) */}
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs flex-wrap gap-2">
